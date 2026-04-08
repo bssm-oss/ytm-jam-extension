@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "YTM Jam",
+  "version": "0.1.0",
+  "description": "Realtime playback sync for YouTube Music.",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://music.youtube.com/*"
+      ],
+      "js": [
+        "dist/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
