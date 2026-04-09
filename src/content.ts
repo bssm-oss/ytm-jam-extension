@@ -37,9 +37,11 @@ let roomId = roomFromQuery ?? localStorage.getItem("ytmjam-room") ?? DEFAULT_ROO
 localStorage.setItem("ytmjam-room", roomId);
 
 let socket: WebSocket | null = null;
+let socketConnected = false;
 let applyingRemoteState = false;
 let syncingNativeQueue = false;
 let lastTrackId: string | null = null;
+let pendingRemoteState: PlaybackState | null = null;
 let lastKnownState: PlaybackState = {
   trackId: null,
   startedAt: null,
@@ -189,11 +191,11 @@ const syncSharedQueueToNativeQueue = async (sharedQueue: string[]): Promise<void
   }
 };
 
-const applyState = async (state: PlaybackState): Promise<void> => {
+const applyState = async (state: PlaybackState): Promise<boolean> => {
   const video = getVideo();
   if (!video) {
     lastKnownState = state;
-    return;
+    return false;
   }
 
   applyingRemoteState = true;
@@ -202,7 +204,7 @@ const applyState = async (state: PlaybackState): Promise<void> => {
       const currentTrackId = getTrackIdFromUrl();
       if (currentTrackId !== state.trackId) {
         location.href = `https://music.youtube.com/watch?v=${state.trackId}&ytmjamRoom=${encodeURIComponent(roomId)}`;
-        return;
+        return true;
       }
     }
 
@@ -216,12 +218,24 @@ const applyState = async (state: PlaybackState): Promise<void> => {
     } else {
       await video.play().catch(() => undefined);
     }
+    return true;
   } finally {
     lastKnownState = state;
     setTimeout(() => {
       applyingRemoteState = false;
     }, 50);
   }
+};
+
+const applyPendingRemoteState = (): void => {
+  if (!pendingRemoteState || applyingRemoteState) {
+    return;
+  }
+  void applyState(pendingRemoteState).then((applied) => {
+    if (applied) {
+      pendingRemoteState = null;
+    }
+  });
 };
 
 const bindTrackChangeWatcher = (): void => {
@@ -271,6 +285,7 @@ const bindLocalPlayerEvents = (): void => {
       return;
     }
     window.clearInterval(interval);
+    applyPendingRemoteState();
 
     video.addEventListener("play", () => {
       if (applyingRemoteState) {
@@ -304,7 +319,7 @@ const bindLocalPlayerEvents = (): void => {
 
 const currentStatusResponse = (): PopupResponse => ({
   ok: true,
-  message: `Connected room: ${roomId}`,
+  message: socketConnected ? `Connected room: ${roomId}` : `Disconnected room: ${roomId}`,
   roomId,
   nowPlaying: getNowPlayingTitle(),
   trackId: getTrackIdFromUrl(),
@@ -331,6 +346,7 @@ const applyPopupCommand = (message: PopupCommand): PopupResponse => {
 const connect = (): void => {
   socket = new WebSocket(WS_URL);
   socket.addEventListener("open", () => {
+    socketConnected = true;
     send({ t: "JOIN", roomId });
   });
   socket.addEventListener("message", (event) => {
@@ -339,13 +355,15 @@ const connect = (): void => {
       if (parsed.t !== "STATE") {
         return;
       }
-      void applyState(parsed.state);
+      pendingRemoteState = parsed.state;
+      applyPendingRemoteState();
       void syncSharedQueueToNativeQueue(parsed.state.queue);
     } catch {
       // Ignore malformed payload.
     }
   });
   socket.addEventListener("close", () => {
+    socketConnected = false;
     setTimeout(connect, 1500);
   });
 };
