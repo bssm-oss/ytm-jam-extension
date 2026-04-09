@@ -12,7 +12,8 @@ type ClientToServer =
   | { t: "PAUSE" }
   | { t: "SEEK"; time: number }
   | { t: "QUEUE_ADD"; trackId: string }
-  | { t: "SKIP" };
+  | { t: "SKIP" }
+  | { t: "PING" };
 
 type ServerToClient = { t: "STATE"; state: PlaybackState };
 
@@ -28,9 +29,10 @@ type PopupResponse = {
   trackId?: string | null;
 };
 
-const WS_URL = "wss://ytm-jam.stuckgwak.com";
+const WS_URL = "wss://ytm-jam.stuckgwak.com/ws";
 const DEFAULT_ROOM = "default";
 const DRIFT_THRESHOLD = 1;
+const HEARTBEAT_MS = 20000;
 
 const roomFromQuery = new URL(location.href).searchParams.get("ytmjamRoom");
 let roomId = roomFromQuery ?? localStorage.getItem("ytmjam-room") ?? DEFAULT_ROOM;
@@ -38,6 +40,7 @@ localStorage.setItem("ytmjam-room", roomId);
 
 let socket: WebSocket | null = null;
 let socketConnected = false;
+let heartbeatTimer: number | null = null;
 let applyingRemoteState = false;
 let syncingNativeQueue = false;
 let lastTrackId: string | null = null;
@@ -91,6 +94,20 @@ const send = (event: ClientToServer): void => {
     return;
   }
   socket.send(JSON.stringify(event));
+};
+
+const stopHeartbeat = (): void => {
+  if (heartbeatTimer !== null) {
+    window.clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+  }
+};
+
+const startHeartbeat = (): void => {
+  stopHeartbeat();
+  heartbeatTimer = window.setInterval(() => {
+    send({ t: "PING" });
+  }, HEARTBEAT_MS);
 };
 
 const getCurrentTime = (state: PlaybackState): number => {
@@ -348,6 +365,7 @@ const connect = (): void => {
   socket.addEventListener("open", () => {
     socketConnected = true;
     send({ t: "JOIN", roomId });
+    startHeartbeat();
   });
   socket.addEventListener("message", (event) => {
     try {
@@ -364,6 +382,7 @@ const connect = (): void => {
   });
   socket.addEventListener("close", () => {
     socketConnected = false;
+    stopHeartbeat();
     setTimeout(connect, 1500);
   });
 };
