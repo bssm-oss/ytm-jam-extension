@@ -3,6 +3,14 @@
   "name": "YTM Jam",
   "version": "0.1.0",
   "description": "Realtime playback sync for YouTube Music.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "action": {
+    "default_title": "YTM Jam",
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
       "matches": [

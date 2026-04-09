@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YTM Jam</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --card: #121a2f;
+        --line: #29344f;
+        --text: #f5f7ff;
+        --muted: #9aa7c7;
+        --accent: #1db954;
+        --accent-2: #2563eb;
+        --danger: #f87171;
+      }
+      body {
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        width: 320px;
+        margin: 0;
+        padding: 14px;
+        background: radial-gradient(circle at top right, #1c2a4e, var(--bg) 55%);
+        color: var(--text);
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        background: color-mix(in srgb, var(--card) 90%, #ffffff 10%);
+        box-shadow: 0 10px 24px rgb(0 0 0 / 30%);
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .title {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      .chip {
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #d1fae5;
+        background: rgb(29 185 84 / 18%);
+        border: 1px solid rgb(29 185 84 / 45%);
+      }
+      .row {
+        margin-bottom: 10px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        background: #0f1629;
+      }
+      .stat .k {
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .stat .v {
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        background: #0f1629;
+        color: var(--text);
+        outline: none;
+      }
+      input:focus {
+        border-color: var(--accent-2);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      button {
+        border: none;
+        border-radius: 10px;
+        padding: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        background: #25314e;
+        color: var(--text);
+      }
+      button.primary {
+        background: linear-gradient(180deg, #2f6dfc, #2353c7);
+      }
+      #status {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--muted);
+        min-height: 16px;
+      }
+      .hint {
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="top">
+        <div class="title">YouTube Music Jam</div>
+        <div id="connectionChip" class="chip">Connected</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="k">Current Room</div>
+          <div id="currentRoom" class="v">-</div>
+        </div>
+        <div class="stat">
+          <div class="k">Now Playing</div>
+          <div id="currentTrack" class="v">-</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">Room</div>
+        <input id="roomId" placeholder="e.g. study" />
+      </div>
+      <div class="grid row">
+        <button id="createRoom" class="primary">Create / Join</button>
+        <button id="refreshStatus">Refresh</button>
+      </div>
+
+      <div class="hint">
+        Control playback and queue in native YouTube Music UI.  
+        Jam sync runs in the background.
+      </div>
+
+      <div id="status"></div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

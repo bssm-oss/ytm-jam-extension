@@ -5,7 +5,7 @@ YouTube Music 동기화를 위한 Chrome extension content script입니다.
 ## 이 모듈이 하는 일
 - WebSocket으로 sync server 연결
 - 룸 `STATE`를 YouTube Music 플레이어에 반영
-- 웹에서 발생한 play/pause/seek 조작을 서버로 다시 전송
+- 웹에서 발생한 재생/탐색/큐 변경 조작을 서버로 다시 전송
 
 ## 시작 전에
 - Node.js 20+
@@ -23,14 +23,17 @@ npm run build
 2. **개발자 모드** 활성화
 3. **Load unpacked** 클릭
 4. `manifest.json`이 있는 `extension/` 디렉터리 선택
+5. extension 아이콘 클릭 후 팝업에서 room create/join
 
 ## 룸 연결 방법
 1. YouTube Music(`https://music.youtube.com`) 접속
-2. 필요하면 URL 쿼리로 룸 지정:
-```text
-https://music.youtube.com/watch?v=<trackId>&ytmjamRoom=study
-```
-3. 서버가 `ws://localhost:3000`에서 실행 중인지 확인
+2. extension 아이콘 클릭 후 room id 입력
+3. **Create/Join** 클릭
+4. 팝업에 현재 room/현재 재생곡 정보가 자동으로 표시됨
+5. 곡 제어는 YouTube Music 웹 UI에서 직접 수행 (재생/탐색/큐)
+6. 큐 동기화는 팝업이 아닌 YTM 네이티브 재생목록 UI 기준으로 백그라운드 적용
+7. 트랙 종료 시 공유 Queue 기준으로 다음 곡(SKIP) 진행
+8. 서버 엔드포인트 `wss://ytm-jam.stuckgwak.com` 접근 가능 여부 확인
 
 ## 로컬 검증 순서
 1. `ytm-jam-server` 실행
